@@ -176,17 +176,132 @@ for ( var attr in Drag.prototype ) {
 	LimitDrag.prototype[attr] = Drag.prototype[attr];
 }
 
+
+// 限定拖拽范围
 LimitDrag.prototype.move = function( ev ){
 	var ev = ev || event;
 	var left = ev.clientX - this.disX;
 	var top = ev.clientY - this.disY;
+	// 剪掉边框
+	var aBorderLeft = parseInt(getStyle(this.oDiv.offsetParent, 'borderLeftWidth'));
+	var aBorderRight = parseInt(getStyle(this.oDiv.offsetParent, 'borderRightWidth'));
+	var aBorderTop = parseInt(getStyle(this.oDiv.offsetParent, 'borderTopWidth'));
+	var aBorderBottom = parseInt(getStyle(this.oDiv.offsetParent, 'borderBottomWidth'));
+	var aWidth = parseInt(getStyle(this.oDiv.offsetParent, 'width'))-aBorderLeft- aBorderRight ;
+	var aHeight = parseInt(getStyle(this.oDiv.offsetParent, 'height'))-aBorderTop- aBorderBottom ;
+	console.log(aBorderLeft)
 	left = left <= 0 ? 0 : left;
-	left = left >= document.documentElement.clientWidth-this.oDiv.offsetWidth ? document.documentElement.clientWidth-this.oDiv.offsetWidth : left;
+	left = left >= aWidth-this.oDiv.offsetWidth ? aWidth-this.oDiv.offsetWidth : left;
 	top = top <= 0 ? 0 : top;
-	top = top >= document.documentElement.clientHeight-this.oDiv.offsetHeight ? document.documentElement.clientHeight-this.oDiv.offsetHeight : top;
+	top = top >= aHeight-this.oDiv.offsetHeight ? aHeight-this.oDiv.offsetHeight : top;
 
 	this.oDiv.style.left = left + 'px';
 	this.oDiv.style.top = top + 'px';
+}
+
+
+})();
+
+
+
+// 图片拼接效果
+(function(){
+
+var oPic = document.getElementById('pic');
+var picNum = 0;
+var timer = null; 
+// 图片的路径
+var arrPic = [1,2,3,4];
+
+
+for(var i = 0; i < 24; i++){
+	var addLi = document.createElement('li');
+	oPic.appendChild( addLi );
+}
+
+var aLi = oPic.getElementsByTagName('li');
+
+getPic(arrPic[0]);
+
+
+$timor('#left').onclick = function(){
+	clearInterval(timer); 
+	picNum = picNum == 0 ? 3 : picNum--;
+	dir = false;
+	changePic( dir, picNum );
+	picNum = getPicNum( dir, picNum );	
+	
+
+}
+
+$timor('#right').onclick = function(){
+	clearInterval(timer); 
+	console.log(picNum);
+	picNum = picNum == 3 ? 0 : picNum++;
+	dir = true;
+	changePic( dir, picNum );
+	picNum = getPicNum( dir, picNum );
+	
+}
+
+function getPic( url ){
+	for(var i = 0; i < aLi.length; i++){
+		var iLeft = 0;
+		var iTop = 0;
+		iTop = parseInt(i/6)*125*(-1);
+		iLeft = i%6*125*(-1);
+		aLi[i].style.background = 'url(img/'+ url +'.jpg) no-repeat '+ iLeft +'px '+ iTop +'px';
+	}
+}
+
+function changePic( dir, picNum ){
+var list = getRandom();
+
+timer = setInterval(function(){
+	if(list.length == 0){ 
+		clearInterval(timer); 
+	}else{
+		var num = list.pop();
+		var iLeft = 0;
+		var iTop = 0;
+		iTop = parseInt(num/6)*125*(-1);
+		iLeft = num%6*125*(-1);
+
+		var url = getPicNum( dir, picNum );
+		console.log(url)
+		// 透明度由1到0 ， 之后，改变背景图，透明度由0 到1
+		timeMove( aLi[num], {'opacity' : 50}, 250, 'easeOutStrong', function(){
+			aLi[num].style.background = 'url(img/'+ url +'.jpg) no-repeat '+ iLeft +'px '+ iTop +'px';
+			timeMove( aLi[num], {'opacity' : 100}, 250, 'easeOutStrong');
+		} );
+		
+	}
+	
+},30)
+	picNum++;
+}
+	
+function getPicNum( dir, picNum ){
+	if(dir){
+		a = picNum == 23 ? 0 : picNum + 1;
+
+	}else{
+		a = picNum == 0 ? 23 : picNum - 1;
+	}
+	return a;
+}
+
+function getRandom(){
+	var arr = [];
+	for(var i = 0; i < aLi.length; i++){
+		arr.push(i);
+	}
+	arr = arr.sort(function( num1, num2 ){
+		return Math.random() > 0.5;
+	})
+	return arr.sort(function( num1, num2 ){
+		return 0.5 - Math.random();
+	})
 }
 
 
